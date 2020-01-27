@@ -12,7 +12,7 @@ import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 
 # Set the URL you want to webscrape from
-url = 'https://myanimelist.net/anime/39017/Kyokou_Suiri'
+url = input("Enter URL")
 
 # Connect to the URL
 response = requests.get(url)
@@ -59,7 +59,6 @@ studioref = ref4.find_next_sibling().text
 studios = studioref.replace("Studios:", "").split(',')
 #for studio in studios:
 #    print(studio.lstrip().rstrip())
-
 
 # Genres
 genres = soup.select('a[href^="/anime/genre/"]')
