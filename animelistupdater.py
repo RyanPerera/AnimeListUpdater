@@ -95,6 +95,7 @@ def update(event=None):
     # print(genrelist)
 
     #print("Finished parsing data!")
+    
     #print("Updating Anime List...")
 
     # Authorize Google Drive/Sheets API
