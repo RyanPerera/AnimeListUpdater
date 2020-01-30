@@ -38,12 +38,10 @@ numEp = episodes2[13:]
 #print(numEp)
 
 # Duration
-ref2 = ref.find_next_sibling("div", class_="spaceit")
-ref3 = ref2.find_next_sibling("div", class_="spaceit")
-ref4 = ref3.find_next_sibling("div", class_="spaceit")
-ref5 = ref4.find_next_sibling("div", class_="spaceit")
-ref6 = ref5.find_next_sibling("div", class_="spaceit")
-duration = re.sub("[^0-9]", "", ref6.text)
+durationref = soup.find(text='Rating:').find_parent().find_previous().find_previous().find_parent()
+durationpre = re.sub("[^0-9]", "", durationref.text)
+if len(durationpre) > 2:
+    duration = (int(durationpre[0])*60) + int(durationpre[1:])
 #print(duration)
 
 # Date Released
@@ -55,10 +53,10 @@ else:
 #print(airDate)
 
 # Studios
-studioref = ref4.find_next_sibling().text
-studios = studioref.replace("Studios:", "").split(',')
-#for studio in studios:
-#    print(studio.lstrip().rstrip())
+studio1 = soup.find(text='Studios:').find_next()
+studio2 = studio1.find_next()
+#print(studio1.text)
+#print(studio2.text)
 
 # Genres
 genres = soup.select('a[href^="/anime/genre/"]')
@@ -84,9 +82,9 @@ rowNum = str(len(sheet.get_all_values())+1)
 
 # Update worksheet
 sheet.append_row([type[0].text, title, "To Watch", "Not Yet Rated", "0", numEp, duration, airDate, "-", "" , "" , genrelist, "=PRODUCT(E" + rowNum +",G" + rowNum + ")"], value_input_option='USER_ENTERED')
-sheet.update_cell(rowNum, 10, studios[0].lstrip().rstrip())
-if (len(studios) > 1):
-    sheet.update_cell(rowNum, 11, studios[1].lstrip().rstrip())
+sheet.update_cell(rowNum, 10, studio1.text)
+if "Source:" not in studio2.text:
+    sheet.update_cell(rowNum, 11, studio2.text)
 print("Anime List Updated!")
 print("Complete!")
 
