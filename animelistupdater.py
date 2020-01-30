@@ -17,7 +17,7 @@ url = input("Enter URL")
 # Connect to the URL
 response = requests.get(url)
 
-# Parse HTML and save to BeautifulSoup object¶
+# Parse HTML and save to BeautifulSoup object
 soup = BeautifulSoup(response.text, "html.parser")
 
 print("Parsing data...")
