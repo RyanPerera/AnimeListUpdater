@@ -95,7 +95,7 @@ def update(event=None):
     # print(genrelist)
 
     #print("Finished parsing data!")
-    
+
     #print("Updating Anime List...")
 
     # Authorize Google Drive/Sheets API
@@ -122,7 +122,10 @@ def update(event=None):
     #print("Anime List Updated!")
     #print("Complete!")
     lbl.configure(text="Successfully updated. Send another?")
+    combo.current(0)
+    txtscr.delete(0,END)
     txt.delete(0, END)
+    txt.focus()
 
 
 btn = Button(can, text="Update", command = update)
