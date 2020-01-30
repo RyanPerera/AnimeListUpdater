@@ -10,83 +10,125 @@ import re
 from bs4 import BeautifulSoup
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
+from tkinter import *
+from tkinter.ttk import *
 
-# Set the URL you want to webscrape from
-url = input("Enter URL")
+window = Tk()
 
-# Connect to the URL
-response = requests.get(url)
+window.title("Anime List Updater")
+window.geometry('700x100')
+can = Canvas(window, height=100, width=700, highlightthickness = 0)
+can.place(relx=0.5, rely=0.5, anchor=CENTER)
+lbl = Label(can, text="Enter MyAnimeList URL:")
+lbl.grid(column=0, row=0)
+txt = Entry(can, width=70, state=NORMAL)
+txt.grid(column=0,row=1)
+txt.focus()
+lblscr = Label(can, text="Score:")
+lblscr.grid(column=1, row=0)
+txtscr = Entry(can, width=3)
+txtscr.grid(column=1,row=1)
+lblsts = Label(can, text="Status:")
+lblsts.grid(column=2, row=0)
+combo = Combobox(can)
+combo['value'] = ("To Watch", "In Progress", "Completed", "Dropped")
+combo.current(0)
+combo.grid(column=2, row=1)
 
-# Parse HTML and save to BeautifulSoup object
-soup = BeautifulSoup(response.text, "html.parser")
+def update(event=None):
+    url = txt.get()
+    status = combo.get()
+    score = txtscr.get()
 
-print("Parsing data...")
+    # Connect to the URL
+    response = requests.get(url)
 
-# Title
-title = soup.find("span", itemprop="name").get_text()
-#print(title)
+    # Parse HTML and save to BeautifulSoup object
+    soup = BeautifulSoup(response.text, "html.parser")
 
-# Type
-type = soup.select('a[href^="https://myanimelist.net/topanime.php?type="]')
-#print(type[0].text)
+    #print("Parsing data...")
 
-# Number of Episodes
-ref = soup.find("div", class_="spaceit")
-episodes = ref.get_text()
-episodes2 = episodes.rstrip()
-numEp = episodes2[13:]
-#print(numEp)
+    # Title
+    title = soup.find("span", itemprop="name").get_text()
+    # print(title)
 
-# Duration
-durationref = soup.find(text='Rating:').find_parent().find_previous().find_previous().find_parent()
-durationpre = re.sub("[^0-9]", "", durationref.text)
-if len(durationpre) > 2:
-    duration = (int(durationpre[0])*60) + int(durationpre[1:])
-#print(duration)
+    # Type
+    type = soup.select('a[href^="https://myanimelist.net/topanime.php?type="]')
+    # print(type[0].text)
 
-# Date Released
-date = ref.find_next_sibling("div", class_="spaceit").get_text()
-if "," not in date[10:16]:
-    airDate = date[18:22].rstrip()
-else:
-    airDate = date[17:22].rstrip()
-#print(airDate)
+    # Number of Episodes
+    ref = soup.find("div", class_="spaceit")
+    episodes = ref.get_text()
+    episodes2 = episodes.rstrip()
+    numEp = episodes2[13:]
+    # print(numEp)
 
-# Studios
-studio1 = soup.find(text='Studios:').find_next()
-studio2 = studio1.find_next()
-#print(studio1.text)
-#print(studio2.text)
+    # Duration
+    durationref = soup.find(text='Rating:').find_parent().find_previous().find_previous().find_parent()
+    durationpre = re.sub("[^0-9]", "", durationref.text)
+    if len(durationpre) > 2:
+        duration = (int(durationpre[0]) * 60) + int(durationpre[1:])
+    else:
+        duration = int(durationpre)
+    # print(duration)
 
-# Genres
-genres = soup.select('a[href^="/anime/genre/"]')
-genrelistpre = ""
-for x in genres:
-    genrelistpre += x.text + ", "
-genrelist = genrelistpre.rstrip(', ')
-#print(genrelist)
+    # Date Released
+    date = ref.find_next_sibling("div", class_="spaceit").get_text()
+    if "," not in date[10:16]:
+        airDate = date[18:22].rstrip()
+    else:
+        airDate = date[17:22].rstrip()
+    # print(airDate)
 
-print("Finished parsing data!")
-print("Updating Anime List...")
+    # Studios
+    studio1 = soup.find(text='Studios:').find_next()
+    studio2 = studio1.find_next()
+    # print(studio1.text)
+    # print(studio2.text)
 
-# Authorize Google Drive/Sheets API
-scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
-creds = ServiceAccountCredentials.from_json_keyfile_name('venv\client_secret.json', scope)
-client = gspread.authorize(creds)
+    # Genres
+    genres = soup.select('a[href^="/anime/genre/"]')
+    genrelistpre = ""
+    for x in genres:
+        genrelistpre += x.text + ", "
+    genrelist = genrelistpre.rstrip(', ')
+    # print(genrelist)
 
-# Open Workbook + sheet no.
-sheet = client.open("Anime List").sheet1
+    #print("Finished parsing data!")
+    #print("Updating Anime List...")
 
-# Get index of last empty row
-rowNum = str(len(sheet.get_all_values())+1)
+    # Authorize Google Drive/Sheets API
+    scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
+    creds = ServiceAccountCredentials.from_json_keyfile_name('venv\client_secret.json', scope)
+    client = gspread.authorize(creds)
 
-# Update worksheet
-sheet.append_row([type[0].text, title, "To Watch", "Not Yet Rated", "0", numEp, duration, airDate, "-", "" , "" , genrelist, "=PRODUCT(E" + rowNum +",G" + rowNum + ")"], value_input_option='USER_ENTERED')
-sheet.update_cell(rowNum, 10, studio1.text)
-if "Source:" not in studio2.text:
-    sheet.update_cell(rowNum, 11, studio2.text)
-print("Anime List Updated!")
-print("Complete!")
+    # Open Workbook + sheet no.
+    sheet = client.open("Anime List").sheet1
+
+    # Get index of last empty row
+    rowNum = str(len(sheet.get_all_values()) + 1)
+
+    # Update worksheet
+    sheet.append_row(
+        [type[0].text, title, status, "Not Yet Rated", "0", numEp, duration, airDate, "-", "", "", genrelist,
+         "=PRODUCT(E" + rowNum + ",G" + rowNum + ")"], value_input_option='USER_ENTERED')
+    sheet.update_cell(rowNum, 10, studio1.text)
+    if "Source:" not in studio2.text:
+        sheet.update_cell(rowNum, 11, studio2.text)
+    if len(score) != 0:
+        sheet.update_cell(rowNum, 4, score)
+
+    #print("Anime List Updated!")
+    #print("Complete!")
+    lbl.configure(text="Successfully updated. Send another?")
+    txt.delete(0, END)
+
+
+btn = Button(can, text="Update", command = update)
+window.bind('<Return>', update)
+btn.grid(column=0, row=5, padx=10, pady = 10)
+
+window.mainloop()
 
 
 
