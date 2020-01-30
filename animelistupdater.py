@@ -118,6 +118,9 @@ def update(event=None):
         sheet.update_cell(rowNum, 11, studio2.text)
     if len(score) != 0:
         sheet.update_cell(rowNum, 4, score)
+    if status == "Completed":
+        sheet.update_cell(rowNum, 5, numEp)
+
 
     #print("Anime List Updated!")
     #print("Complete!")
